@@ -1,0 +1,160 @@
+add PostgreSQL as a Docker service, confirm it runs, and then connect Actix-web to it using SQLx.
+
+## 1. Update `docker-compose.yml`
+
+Replace your current file with:
+
+```yaml
+services:
+  backend:
+    build: ./backend
+    container_name: toast-backend
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgres://toast_user:toast_password@postgres:5432/toast_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    container_name: toast-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: toast-postgres
+    environment:
+      POSTGRES_USER: toast_user
+      POSTGRES_PASSWORD: toast_password
+      POSTGRES_DB: toast_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U toast_user -d toast_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+```
+
+The official PostgreSQL Docker image uses `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` to initialize the database. ([Docker Hub][1])
+
+### Important detail
+
+Inside Docker, the backend connects to:
+
+```text
+postgres:5432
+```
+
+Not:
+
+```text
+localhost:5432
+```
+
+`postgres` is the Compose service name.
+
+## 2. Start everything
+
+From the root folder:
+
+```bash
+docker compose down
+docker compose up --build
+```
+
+You should eventually see something similar to:
+
+```text
+toast-postgres | database system is ready to accept connections
+toast-backend  | Server running on port 8080
+toast-frontend | VITE ready
+```
+
+## 3. Confirm PostgreSQL is running
+
+Open another terminal and run:
+
+```bash
+docker compose ps
+```
+
+You should see three services:
+
+```text
+toast-frontend
+toast-backend
+toast-postgres
+```
+
+Postgres should show as `healthy`.
+
+## 4. Enter PostgreSQL directly
+
+Run:
+
+```bash
+docker exec -it toast-postgres psql -U toast_user -d toast_db
+```
+
+You should enter the PostgreSQL shell:
+
+```text
+toast_db=#
+```
+
+Test it:
+
+```sql
+SELECT version();
+```
+
+Then exit:
+
+```sql
+\q
+```
+
+## 5. Add SQLx to Rust
+
+Inside the backend folder:
+
+```bash
+cd backend
+cargo add sqlx --features runtime-tokio,postgres
+```
+
+SQLx is an asynchronous Rust database library with PostgreSQL support, and its Tokio runtime integration fits Actix-web’s async environment. ([Docs.rs][2])
+
+Also add environment-variable support:
+
+```bash
+cargo add dotenvy
+```
+
+Do not change `main.rs` yet. First confirm that:
+
+```bash
+docker compose up --build
+```
+
+starts all three containers successfully. Then we’ll create a real database pool and add an endpoint such as:
+
+```text
+GET /api/db-health
+```
+
+that proves Rust is actually talking to PostgreSQL.
+
+[1]: https://hub.docker.com/_/postgres?utm_source=chatgpt.com "postgres - Official Image"
+[2]: https://docs.rs/sqlx/latest/sqlx/?utm_source=chatgpt.com "sqlx - Rust"

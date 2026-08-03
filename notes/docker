@@ -227,3 +227,341 @@ backend/
 ```
 
 After this works, the next step is the React `Dockerfile`, followed by a root-level `docker-compose.yml` that starts both apps with one command.
+
+## front end with docker 
+
+Awesome. You're actually building this in the same order many companies do.
+
+Current progress:
+
+```text
+✅ React app
+✅ Rust Actix backend
+✅ Git/GitHub
+✅ Docker Desktop
+✅ Backend Dockerized
+
+Next:
+⬜ Frontend Dockerfile
+⬜ docker-compose.yml
+⬜ React ↔ Rust communication
+```
+
+---
+
+# Step 1 - Create a Dockerfile
+
+Inside your `frontend/` folder:
+
+```bash
+touch Dockerfile
+```
+
+Paste this into `frontend/Dockerfile`:
+
+```dockerfile
+FROM node:22-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+EXPOSE 5173
+
+CMD ["npm", "run", "dev", "--", "--host"]
+```
+
+Why `--host`?
+
+Normally Vite only listens on:
+
+```text
+localhost
+```
+
+Inside Docker that's inaccessible from your Mac.
+
+This makes Vite listen on:
+
+```text
+0.0.0.0
+```
+
+so Docker can expose it.
+
+---
+
+# Step 2 - Create `.dockerignore`
+
+Inside `frontend/`:
+
+```bash
+touch .dockerignore
+```
+
+Paste:
+
+```text
+node_modules
+dist
+.git
+.DS_Store
+```
+
+---
+
+# Step 3 - Build the image
+
+Inside `frontend`:
+
+```bash
+docker build -t toast-frontend .
+```
+
+The first build downloads Node, so it'll take a minute.
+
+---
+
+# Step 4 - Run it
+
+```bash
+docker run --rm -p 5173:5173 toast-frontend
+```
+
+Now open
+
+```
+http://localhost:5173
+```
+
+Your React app should appear exactly like when you run:
+
+```bash
+npm run dev
+```
+
+---
+
+## root level dockerfile
+
+# Step 5 - Verify
+
+You should now have:
+
+```text
+toast-rust-dashboard
+│
+├── backend
+│   ├── Dockerfile
+│   └── .dockerignore
+│
+├── frontend
+│   ├── Dockerfile
+│   └── .dockerignore
+│
+└── .git
+```
+
+---
+
+## After this comes the fun part 🚀
+
+Right now you're still starting each container manually:
+
+```bash
+docker run ...
+```
+
+The next step is **Docker Compose**.
+
+Instead of two separate commands, you'll have a single `docker-compose.yml` at the project root, and you'll be able to start the entire stack with:
+
+```bash
+docker compose up
+```
+
+That will launch:
+
+* 🦀 Rust backend
+* ⚛️ React frontend
+* (Soon) PostgreSQL
+* (Later) Redis
+
+With one command. That's much closer to how production development works, and it's exactly the kind of workflow you'll see on teams using Docker and Kubernetes.
+
+Awesome. This is the part where your project starts to feel like a **real** full-stack application.
+
+Your structure should now look like:
+
+```text
+toast-rust-dashboard/
+│
+├── backend/
+│   ├── Dockerfile
+│   └── .dockerignore
+│
+├── frontend/
+│   ├── Dockerfile
+│   └── .dockerignore
+│
+└── docker-compose.yml   <-- we're creating this
+```
+
+---
+
+
+
+# root level docker file
+
+# Step 1: Create `docker-compose.yml`
+
+From the project root:
+
+```bash
+touch docker-compose.yml
+```
+
+Paste this into it:
+
+```yaml
+services:
+  backend:
+    build: ./backend
+    container_name: toast-backend
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build: ./frontend
+    container_name: toast-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+```
+
+This tells Docker Compose:
+
+* Build the backend from `./backend`
+* Build the frontend from `./frontend`
+* Start the backend first
+* Expose:
+
+  * React → `localhost:5173`
+  * Rust → `localhost:8080`
+
+---
+
+# Step 2: Stop any running containers
+
+If you still have containers running from earlier:
+
+```bash
+docker ps
+```
+
+Stop them:
+
+```bash
+docker stop toast-backend toast-frontend
+```
+
+If Docker says one of them doesn't exist, that's fine.
+
+---
+
+# Step 3: Start everything
+
+From the project root:
+
+```bash
+docker compose up --build
+```
+
+The first time, you'll see Docker:
+
+* Build the Rust image
+* Build the React image
+* Start both containers
+
+After they're running, open:
+
+Frontend:
+
+```text
+http://localhost:5173
+```
+
+Backend:
+
+```text
+http://localhost:8080
+```
+
+Health endpoint:
+
+```text
+http://localhost:8080/api/health
+```
+
+---
+
+# What you'll see
+
+Docker Compose will show logs from both containers together, something like:
+
+```text
+toast-backend  | Server running on port 8080
+toast-frontend | VITE v7.x ready in ...
+```
+
+To stop everything:
+
+```bash
+Ctrl + C
+```
+
+Or from another terminal:
+
+```bash
+docker compose down
+```
+
+---
+
+## Why Compose is useful
+
+Before today, you needed:
+
+```bash
+docker run ...
+docker run ...
+```
+
+Now it's just:
+
+```bash
+docker compose up
+```
+
+One command starts your entire application. As your project grows, adding more services is straightforward. For example:
+
+```yaml
+services:
+  frontend:
+  backend:
+  postgres:
+  redis:
+```
+
+Those additional services will all come up together with the same `docker compose up` command.
+
+---
+
+## One suggestion
+
+Once we confirm this works, I'd like to make one improvement: **add named volumes** so React's `node_modules` and Rust's build cache persist between container restarts. That makes rebuilds significantly faster and is a common setup in development environments. After that, we can connect the React frontend to your Rust API and then add PostgreSQL.
