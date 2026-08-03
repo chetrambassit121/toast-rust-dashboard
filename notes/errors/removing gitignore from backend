@@ -1,0 +1,71 @@
+when doing inital git add . this error occurred
+
+chetrambassit@Mac toast-rust-dashboard % git add . error: 'backend/' does not have a commit checked out error: unable to index file 'backend/' fatal: adding files failed
+
+This solution worked
+
+
+## That error is almost always caused by **`backend/` being its own Git repository**.
+
+When you ran something like:
+
+```bash
+cargo new backend
+```
+
+or another command, it's possible a `.git` directory was created inside `backend/`.
+
+Let's check.
+
+Run:
+
+```bash
+ls -la backend
+```
+
+If you see something like:
+
+```text
+.git
+Cargo.toml
+src
+...
+```
+
+then `backend` is currently a **nested Git repository**, and your top-level repository doesn't know how to add it.
+
+## Fix (what you probably want)
+
+If you want **one Git repository** for the entire project (recommended):
+
+1. Remove the nested Git repository:
+
+```bash
+rm -rf backend/.git
+```
+
+2. Then try again:
+
+```bash
+git add .
+```
+
+3. Commit:
+
+```bash
+git commit -m "Initial project structure"
+```
+
+---
+
+## If `ls` doesn't show `.git`
+
+Run this instead:
+
+```bash
+find . -name ".git"
+```
+
+Please paste the output. That will tell us exactly where Git repositories exist.
+
+**Don't run any other `rm -rf` commands besides `rm -rf backend/.git` until we confirm the output.** It's a safe fix if `backend/.git` exists, but I'd like to verify first.
