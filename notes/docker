@@ -1,0 +1,229 @@
+
+### Install Docker Desktop (on my M4 is ARM-based)
+
+1. Open Docker’s official Mac installation page and select **Mac with Apple silicon**. ([Docker Documentation][1])
+2. Open the downloaded `Docker.dmg`.
+3. Drag **Docker** into the **Applications** folder.
+4. Open **Applications → Docker**.
+5. Approve any macOS permission prompts.
+6. Accept Docker’s terms and use the recommended settings.
+
+Docker Desktop includes everything we need:
+
+* Docker Engine
+* Docker CLI
+* Docker Compose
+
+You do **not** need to install Compose separately. ([Docker Documentation][2])
+
+### Verify the installation
+
+Wait until the whale icon appears at the top of your Mac and Docker says it is running. Then open a new terminal and run:
+
+```bash
+docker --version
+```
+
+Then:
+
+```bash
+docker compose version
+```
+
+Finally, test an actual container:
+
+```bash
+docker run hello-world
+```
+
+A successful result will contain:
+
+```text
+Hello from Docker!
+```
+
+You can also verify your architecture:
+
+```bash
+uname -m
+```
+
+Your M4 should return:
+
+```text
+arm64
+```
+
+Once `docker run hello-world` works, we can add a `Dockerfile` to your Rust Actix-web backend first, then Dockerize React, and finally connect both using `docker compose`.
+
+[1]: https://docs.docker.com/desktop/setup/install/mac-install/?utm_source=chatgpt.com "Install Docker Desktop on Mac"
+[2]: https://docs.docker.com/compose/install/?utm_source=chatgpt.com "Overview of installing Docker Compose"
+
+### Dockerize the Rust Actix-web backend
+
+Great. Let’s Dockerize the **Rust Actix-web backend first**.
+
+From your project root:
+
+```text
+toast-rust-dashboard/
+├── backend/
+└── frontend/
+```
+
+## 1. Create the backend Dockerfile
+
+Run:
+
+```bash
+cd backend
+touch Dockerfile
+```
+
+Open `backend/Dockerfile` and paste:
+
+```dockerfile
+# Build stage
+FROM rust:1-slim AS builder
+
+WORKDIR /app
+
+COPY Cargo.toml Cargo.lock ./
+COPY src ./src
+
+RUN cargo build --release
+
+
+# Runtime stage
+FROM debian:bookworm-slim
+
+WORKDIR /app
+
+COPY --from=builder /app/target/release/backend /app/backend
+
+EXPOSE 8080
+
+CMD ["./backend"]
+```
+
+Important: this line assumes the compiled Rust binary is named `backend`:
+
+```dockerfile
+COPY --from=builder /app/target/release/backend /app/backend
+```
+
+Because you created the project using:
+
+```bash
+cargo new backend
+```
+
+that should be correct.
+
+## 2. Make Actix listen outside the container
+
+In `backend/src/main.rs`, make sure your server binds to:
+
+```rust
+.bind(("0.0.0.0", 8080))?
+```
+
+Not:
+
+```rust
+.bind(("127.0.0.1", 8080))?
+```
+
+A simple example:
+
+```rust
+use actix_web::{get, App, HttpResponse, HttpServer, Responder};
+
+#[get("/")]
+async fn hello() -> impl Responder {
+    HttpResponse::Ok().body("Hello from Rust and Docker!")
+}
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    println!("Backend running at http://0.0.0.0:8080");
+
+    HttpServer::new(|| App::new().service(hello))
+        .bind(("0.0.0.0", 8080))?
+        .run()
+        .await
+}
+```
+
+## 3. Create `.dockerignore`
+
+Inside the `backend` folder:
+
+```bash
+touch .dockerignore
+```
+
+Paste:
+
+```text
+target/
+.git/
+.env
+.DS_Store
+```
+
+This prevents Docker from copying unnecessary files into the build.
+
+## 4. Build the Docker image
+
+Make sure you are inside `backend`:
+
+```bash
+docker build -t toast-backend .
+```
+
+The first Rust build may take a few minutes because Docker must download the Rust image and compile the dependencies.
+
+## 5. Run the container
+
+```bash
+docker run --rm -p 8080:8080 toast-backend
+```
+
+Now open:
+
+```text
+http://localhost:8080
+```
+
+You should see:
+
+```text
+Hello from Rust and Docker!
+```
+
+The port mapping means:
+
+```text
+Your Mac port 8080 → Docker container port 8080
+```
+
+Stop the container with:
+
+```text
+Control + C
+```
+
+## Your backend folder should now look like this
+
+```text
+backend/
+├── src/
+│   └── main.rs
+├── Cargo.toml
+├── Cargo.lock
+├── Dockerfile
+└── .dockerignore
+```
+
+After this works, the next step is the React `Dockerfile`, followed by a root-level `docker-compose.yml` that starts both apps with one command.
