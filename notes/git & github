@@ -1,0 +1,300 @@
+
+# Step 1 — Create the Git repository
+
+Inside your project folder:
+
+```bash
+git init
+```
+
+Check:
+
+```bash
+git status
+```
+
+---
+
+# Step 2 — Create the GitHub repository
+
+Go to GitHub
+
+Click
+
+```
+New Repository
+```
+
+Example name
+
+```
+toast-rust-dashboard
+```
+
+Don't initialize with README.
+
+---
+
+# Step 3 — Connect local repo
+
+GitHub will give you something like
+
+```bash
+git remote add origin https://github.com/YOUR_USERNAME/toast-rust-dashboard.git
+```
+
+Verify
+
+```bash
+git remote -v
+```
+
+---
+
+# Step 4 — Create the .gitignore
+
+Since we're using
+
+* Rust
+* React
+* Node
+* VS Code
+* macOS
+
+I'd use:
+
+```gitignore
+# ==========================
+# Rust
+# ==========================
+/target
+**/*.rs.bk
+Cargo.lock
+
+# Keep Cargo.lock for binaries.
+# Remove this line if this becomes an application.
+#! Cargo.lock
+
+# ==========================
+# React / Node
+# ==========================
+node_modules/
+dist/
+build/
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ==========================
+# Environment Variables
+# ==========================
+.env
+.env.*
+!.env.example
+
+# ==========================
+# macOS
+# ==========================
+.DS_Store
+
+# ==========================
+# VS Code
+# ==========================
+.vscode/
+
+# ==========================
+# JetBrains
+# ==========================
+.idea/
+
+# ==========================
+# Logs
+# ==========================
+logs
+*.log
+
+# ==========================
+# Coverage
+# ==========================
+coverage/
+
+# ==========================
+# Temporary Files
+# ==========================
+tmp/
+temp/
+```
+
+---
+
+# Step 5 — First Commit
+
+```bash
+git add .
+```
+
+```bash
+git commit -m "Initial project setup"
+```
+
+---
+
+# Step 6 — Push
+
+Rename the branch
+
+```bash
+git branch -M main
+```
+
+Push
+
+```bash
+git push -u origin main
+```
+
+---
+
+# Git Workflow
+
+Every feature:
+
+```bash
+git status
+```
+
+```bash
+git add .
+```
+
+```bash
+git commit -m "Created React frontend"
+```
+
+```bash
+git push
+```
+
+---
+
+# Example Commit History
+
+I would do something like:
+
+```
+Initial project setup
+
+Install Rust toolchain
+
+Create Axum backend
+
+Add health check endpoint
+
+Create React frontend
+
+Configure Vite
+
+Connect React to backend API
+
+Display API response
+
+Create Toast API client
+
+Load restaurant data
+
+Display restaurant cards
+
+Add error handling
+
+Add loading spinner
+
+Dockerize backend
+
+Dockerize frontend
+
+Configure Cloudflare deployment
+
+Deploy MVP
+```
+
+This looks like a real development timeline.
+
+---
+
+# README
+
+Eventually your README could look like this:
+
+```text
+Toast Rust Dashboard
+
+Tech Stack
+
+Backend
+- Rust
+- Axum
+- Tokio
+- Reqwest
+- Serde
+
+Frontend
+- React
+- TypeScript
+- Vite
+
+Other
+- Toast API
+- Docker
+- GitHub
+- Cloudflare (planned)
+```
+
+Then include:
+
+```
+Architecture
+
+React
+      ↓
+HTTP
+
+Axum API
+      ↓
+Toast API
+```
+
+---
+
+## One suggestion for your `.gitignore`
+
+Since this is a **Rust web application** (not a reusable library), I would **keep `Cargo.lock` in Git**. The Rust community recommends committing `Cargo.lock` for applications so everyone builds against the same dependency versions. That means **remove** this line from the `.gitignore`:
+
+```gitignore
+Cargo.lock
+```
+
+and commit the generated `Cargo.lock` file.
+
+## One more thing that will impress interviewers
+
+As we build, let's create a **feature branch** for each major milestone instead of committing everything directly to `main`:
+
+```bash
+git checkout -b feature/react-frontend
+```
+
+After finishing:
+
+```bash
+git add .
+git commit -m "Create React frontend"
+git checkout main
+git merge feature/react-frontend
+git push origin main
+```
+
+Even if you're working solo, this demonstrates a professional Git workflow that mirrors what many engineering teams use.
+
+I think this project has a lot of potential for Wednesday because it aligns closely with the stack you mentioned (Rust, React, APIs, Cloudflare, Docker). A small, polished end-to-end app with a clean commit history is likely to make a stronger impression than a larger, unfinished project.

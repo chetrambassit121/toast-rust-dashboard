@@ -1,0 +1,173 @@
+## installation of rust on MacOs
+
+## Step 1: Install Apple's Command Line Tools
+
+First, make sure you have Apple's compiler tools.
+
+Open **Terminal** and run:
+
+```bash
+xcode-select --install
+```
+
+If it says they're already installed, you're good.
+
+---
+
+## Step 2: Install Rust (includes Cargo)
+
+Run this command:
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+This installs:
+
+* ✅ `rustup` (Rust version manager)
+* ✅ `rustc` (Rust compiler)
+* ✅ `cargo` (package manager/build tool) ([Rust][1])
+
+When prompted, type:
+
+```
+1
+```
+
+and press **Enter** for the default installation.
+
+---
+
+## Step 3: Reload your terminal
+
+Run:
+
+```bash
+source "$HOME/.cargo/env"
+```
+
+or simply close Terminal and open it again.
+
+---
+
+## Step 4: Verify everything installed
+
+Run these commands one by one:
+
+```bash
+rustc --version
+```
+
+```bash
+cargo --version
+```
+
+```bash
+rustup --version
+```
+
+You should see something similar to:
+
+```
+rustc 1.xx.x
+cargo 1.xx.x
+rustup 1.xx.x
+```
+
+---
+
+## Step 5: Update Rust
+
+```bash
+rustup update
+```
+
+This keeps Rust, Cargo, and rustup on the latest stable release. ([Ehuss][2])
+
+---
+
+# Step 6: Create your first project
+
+```bash
+cargo new hello_rust
+```
+
+Go into it:
+
+```bash
+cd hello_rust
+```
+
+Run it:
+
+```bash
+cargo run
+```
+
+You should see:
+
+```
+Hello, world!
+```
+
+🎉 Congratulations—you've officially built your first Rust program.
+
+---
+
+# Step 7: Install useful components
+
+```bash
+rustup component add rustfmt
+```
+
+```bash
+rustup component add clippy
+```
+
+These give you:
+
+* **rustfmt** → automatically formats your code
+* **clippy** → finds common mistakes and suggests improvements
+
+---
+
+# Step 8: Install VS Code extensions
+
+If you're using VS Code, install:
+
+* **Rust Analyzer** (the essential Rust extension)
+* **CodeLLDB** (for debugging)
+
+---
+
+# Step 9: Check your PATH (if commands aren't found)
+
+
+If `cargo` or `rustc` says "command not found", add Cargo to your shell:
+
+```bash
+echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+---
+
+## If you get stuck...
+
+Copy and paste the output of these commands:
+
+```bash
+rustc --version
+cargo --version
+rustup --version
+echo $PATH
+```
+
+and I'll help you fix it.
+
+After this is working, we'll build our **Actix-web + React + PostgreSQL** full-stack project together.
+
+[1]: https://rust-lang.org/learn/get-started/?utm_source=chatgpt.com "Getting started - Rust Programming Language"
+[2]: https://ehuss.github.io/rustup/basics.html?utm_source=chatgpt.com "Basic usage - The rustup book"
+
+
