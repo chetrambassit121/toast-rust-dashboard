@@ -1,0 +1,94 @@
+After cargo run command...
+
+`Hello, world!` means Cargo successfully compiled and ran `src/main.rs`. It exited immediately because it is currently just a regular Rust program, not a web server.
+
+Next, turn it into an Actix-web backend.
+
+### 1. Add Actix-web
+
+From inside `backend`:
+
+```bash
+cargo add actix-web
+```
+
+### 2. Replace `src/main.rs`
+
+```rust
+use actix_web::{get, App, HttpResponse, HttpServer, Responder};
+
+#[get("/")]
+async fn home() -> impl Responder {
+    HttpResponse::Ok().body("Rust backend is running!")
+}
+
+#[get("/api/health")]
+async fn health() -> impl Responder {
+    HttpResponse::Ok().json(serde_json::json!({
+        "status": "ok"
+    }))
+}
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    println!("Server running at http://localhost:8080");
+
+    HttpServer::new(|| {
+        App::new()
+            .service(home)
+            .service(health)
+    })
+    .bind(("127.0.0.1", 8080))?
+    .run()
+    .await
+}
+```
+
+### 3. Add Serde JSON
+
+```bash
+cargo add serde_json
+```
+
+### 4. Start the backend
+
+```bash
+cargo run
+```
+
+This time the terminal should remain running and show:
+
+```text
+Server running at http://localhost:8080
+```
+
+Open these in your browser:
+
+```text
+http://localhost:8080
+```
+
+```text
+http://localhost:8080/api/health
+```
+
+You should get:
+
+```text
+Rust backend is running!
+```
+
+and:
+
+```json
+{
+  "status": "ok"
+}
+```
+
+Keep that terminal open. Use a second terminal to run the React frontend with:
+
+```bash
+cd frontend
+npm run dev
+```

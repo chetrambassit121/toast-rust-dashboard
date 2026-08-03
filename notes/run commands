@@ -1,0 +1,137 @@
+
+```text
+toast-rust-dashboard/
+├── backend/
+└── frontend/
+```
+
+run **each project in its own terminal**.
+
+## 1. Start the Rust backend
+
+Open a terminal:
+
+```bash
+cd backend
+```
+
+Make sure you're inside the folder:
+
+```bash
+pwd
+```
+
+You should see something like:
+
+```text
+.../toast-rust-dashboard/backend
+```
+
+Then run:
+
+```bash
+cargo run
+```
+
+If everything is set up correctly, you'll see something similar to:
+
+```text
+Compiling backend v0.1.0
+Finished dev [unoptimized + debuginfo]
+Running `target/debug/backend`
+```
+
+If you're using **Actix-web**, you'll eventually see something like:
+
+```text
+Server running at http://127.0.0.1:8080
+```
+
+---
+
+## 2. Start the React frontend
+
+Open **another terminal**.
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Vite will usually start on:
+
+```text
+http://localhost:5173
+```
+
+Now you'll have
+
+```
+React
+localhost:5173
+      │
+      │ HTTP
+      ▼
+Rust Actix
+localhost:8080
+```
+
+---
+
+## 3. If `cargo run` fails...
+
+Run:
+
+```bash
+ls
+```
+
+You should see:
+
+```text
+Cargo.toml
+src
+```
+
+If you **don't** see `Cargo.toml`, you're not inside the Rust project.
+
+---
+
+## 4. If you haven't written the server yet
+
+`cargo new backend` only creates a basic Rust console app.
+
+Your `src/main.rs` will probably look like:
+
+```rust
+fn main() {
+    println!("Hello, world!");
+}
+```
+
+Running
+
+```bash
+cargo run
+```
+
+will simply print:
+
+```text
+Hello, world!
+```
+
+That's normal.
+
+To make it a web server, we'll add **Actix-web** next. Go to rust-actix-web setup.
+
+---
+
+
+
+
+
+
+
+
