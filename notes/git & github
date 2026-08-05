@@ -295,6 +295,12 @@ git merge feature/react-frontend
 git push origin main
 ```
 
-Even if you're working solo, this demonstrates a professional Git workflow that mirrors what many engineering teams use.
 
-I think this project has a lot of potential for Wednesday because it aligns closely with the stack you mentioned (Rust, React, APIs, Cloudflare, Docker). A small, polished end-to-end app with a clean commit history is likely to make a stronger impression than a larger, unfinished project.
+# Push code from feature branch to main
+
+git status
+git push
+git switch main
+git pull origin main
+git merge feature/square-api-setup
+git push origin main
